@@ -2,8 +2,11 @@
 
 use OpenAI\Laravel\Facades\OpenAI;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Profile\Avatar\AvatarController;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,3 +46,26 @@ require __DIR__.'/auth.php';
 
 // echo $result['choices'][0]['text']; // an open-source, widely-used, server-side scripting language.
 // });
+
+// Route::get('/auth/redirect', function () {
+//     return Socialite::driver('github')->redirect();
+// });
+
+Route::post('/auth/redirect', function () {
+    return Socialite::driver('github')->redirect();
+})->name('login.github');
+ 
+Route::get('/auth/callback', function () {
+    $user = Socialite::driver('github')->user();
+
+    $user = User::firstOrCreate(['email' => $user->email], [
+        'name' => $user->name,
+        'password' => bcrypt('password'),
+    ]);
+
+    Auth::login($user);
+    return redirect('/dashboard');
+ 
+    //dd($user);
+    // $user->token
+});
